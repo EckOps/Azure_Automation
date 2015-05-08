@@ -1,0 +1,52 @@
+workflow Stop-VMsInCloudService
+{
+    # Version - 3.30.15.0
+    Param (
+        [Parameter(Mandatory=$true)]
+        [String]
+        $ServiceName,
+
+        [Parameter(Mandatory=$false)]
+        [String]
+        $ExclusionList,
+
+        [Parameter(Mandatory=$false)]
+        [String]
+        $ConnectAzureSubscriptionName,
+
+        [Parameter(Mandatory=$false)]
+        [String]
+        $ManualWorkDays
+              #If specified, these are the days that you want the VM to run.
+              #You pass in the days as an array of strings using the weekdays as the parameters.
+              #ex.
+              # Stop-VMsInCloudService -ManualWorkDays monday,tuesday,wednesday
+   )
+    if ($ManualWorkDays -eq $null) {
+        $runscript = Get-IsWorkHours
+    } else {
+        $runscript = Get-IsWorkHours -manualWorkDays $ManualWorkDays
+    }
+    if ($runscript) {
+        if ($ConnectAzureSubscriptionName -eq $null) {
+            Connect-Azure 
+        } else {
+            Connect-Azure -AzureSubscriptionName $ConnectAzureSubscriptionName
+        }
+
+        $List = Get-AzureVM -ServiceName $ServiceName | select name,servicename
+        $excludeLog
+        foreach ($server in $List) {
+            $tempName = $server.Name
+            $tempSName = $server.ServiceName
+            if ($ExclusionList -notcontains $server.Name) {
+                $ignorevar = Stop-AzureVM -ServiceName $tempSName -Name $tempName -Force
+                Write-Verbose -Message "Stopped VM: $tempName" -Verbose
+            } else {
+                $excludeLog += $tempName + ", "
+            }
+        }
+    } else {
+        "Not stopping any VMs because the time is currently during work hours."
+    }
+}

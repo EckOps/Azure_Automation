@@ -1,0 +1,17 @@
+workflow Connect-Azure
+{
+    # Version - 3.30.15.0
+    param
+    (
+        [Parameter(Mandatory=$false)]
+        [string]
+        $AzureSubscriptionName = "Visual Studio Professional with MSDN"
+    )
+    #
+    $cred = Get-AutomationPSCredential -name user
+    #connect to Azure
+    Add-AzureAccount -credential $cred
+    #>#
+    Select-AzureSubscription -SubscriptionName $AzureSubscriptionName
+    Write-Verbose -Message "Connected to Azure Subscription: $AzureSubscriptionName" -Verbose
+}

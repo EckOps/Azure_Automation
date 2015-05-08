@@ -1,0 +1,42 @@
+workflow Get-IsWorkHours
+{
+    # Version - 3.30.15.0
+    param (
+        [string] $manualWorkDays
+    )
+    $Now = Get-Date
+    $Day = InlineScript {
+     $using:Now.DayOfWeek
+    }
+    if ($manualWorkDays -eq $null) {
+        if ("06" -match $Day) {
+            return $false
+        }
+    } else {
+        $toreturn = inlinescript {
+                        $weekdays = ""
+                        $manualworkdays = $using:manualworkdays
+                        if ($manualWorkDays -match ",") {
+                            $manualWorkDays = ($using:manualWorkDays).ToLower().Split(",").Trim()
+                        }
+                        foreach ($workday in $manualWorkDays) {
+                            switch ($workday) {
+                                "sunday"    {$weekdays +=     "0";break}
+                                "monday"    {$weekdays +=     "1";break}
+                                "tuesday" {$weekdays    +=     "2";break}
+                                "wednesday" {$weekdays +=     "3";break}
+                                "thursday"  {$weekdays +=     "4";break}
+                                "friday" {$weekdays    +=     "5";break}
+                                "saturday"  {$weekdays +=     "6";break}
+                            }
+                        }
+                        $day = (Get-Date).DayOfWeek.value__.ToString()
+                        if ($weekdays -match $day) {
+                            return $true
+                        } else {
+                            return $false
+                        }
+                    }
+        return $toreturn
+    }
+} 
